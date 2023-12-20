@@ -3,7 +3,6 @@ import dotenv from "dotenv";
 import express from "express";
 import pg from "pg";
 
-export function runServer(){
 
 dotenv.config(); // Read .env file lines as though they were env vars.
 
@@ -208,7 +207,6 @@ app.put("/user/:userid",
   });
 
 startDB();
-}
 
 export async function startDB() {
   await client.connect();
@@ -219,5 +217,3 @@ export async function startDB() {
     );
   });
 }
-
-runServer()
