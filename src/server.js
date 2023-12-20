@@ -5,14 +5,14 @@ import pg from "pg";
 
 dotenv.config(); // Read .env file lines as though they were env vars.
 
-const USER = process.env.USER;
-const PASSWORD = process.env.PASSWORD;
-const DATABASE = process.env.DATABASE;
-const HOST = process.env.HOST;
-const PORT = process.env.PORT;
+const PGUSER = process.env.PGUSER;
+const PGPASS = process.env.PGPASS;
+const PGDB = process.env.PGDB;
+const PGHOST = process.env.PGHOST;
+const PGPORT = process.env.PGPORT;
 
 const client = new pg.Client({
-  connectionString: `postgres://${USER}:${PASSWORD}@${HOST}:${PORT}/${DATABASE}`,
+  connectionString: `postgres://${PGUSER}:${PGPASS}@${PGHOST}:${PGPORT}/${PGDB}`,
   ssl: {rejectUnauthorized: false},
 });
 
@@ -158,9 +158,9 @@ startDB();
 export async function startDB() {
   await client.connect();
 
-  app.listen(PORT, () => {
+  app.listen(PGPORT, () => {
     console.log(
-      `Node.js server is listening for HTTP requests on port ${PORT}.`,
+      `Node.js server is listening for HTTP requests on port ${PGPORT}.`,
     );
   });
 }
