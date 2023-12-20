@@ -7,11 +7,3 @@ CREATE TABLE donations (
     donation_amount numeric(10, 2) NOT NULL,
   	donation_time TIMESTAMP DEFAULT current_timestamp 
 );
-
-
-
-
-
-
-
-

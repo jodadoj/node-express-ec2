@@ -13,7 +13,7 @@ const PGPORT = process.env.PGPORT;
 
 const client = new pg.Client({
   connectionString: `postgres://${PGUSER}:${PGPASS}@${PGHOST}:${PGPORT}/${PGDB}`,
-  ssl: { rejectUnauthorized: false },
+  ssl: {rejectUnauthorized: false},
 });
 
 // Configure express routes
@@ -23,30 +23,37 @@ app.use(express.json()); // add JSON body parser to each following route handler
 app.use(express.urlencoded({ extended: true }));
 app.use(cors()); // add CORS support to each following route handler
 
-app.get("/test", async (req, res) => {
-  res.json({ message: "pass!" });
-});
-
-app.get("/", async (req, res) => {
+app.get('/', async (req, res) => {
   const data = {
-    1: "use:",
-    2: "/user/:userid to view a certain user's info",
-    3: "/user/:userid/donations to view all of given user's donation info ",
-    4: "/user/:userid/donation/:donationid to view details of one particular donation",
-  };
-  res.json(data);
+  1: 'use:',
+  2: '/users/ to view all users info',
+  3: '/user/:userid to view a certain user\'s info',
+  4: '/user/:userid/donations to view all of given user\'s donation info ',
+  5: '/user/:userid/donation/:donationid to view details of one particular donation'}
+  res.json(data)
+})
+
+app.get("/users/", async (req, res) => {
+  try {
+    const query = "SELECT * FROM users";
+    const response = await client.query(query);
+    res.status(200).json(response.rows);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500);
+  }
 });
 
 app.get("/user/:userid", async (req, res) => {
   try {
     const userid = req.params.userid;
-    console.log(userid);
     const query = "SELECT * FROM users where users.userid = $1";
     const response = await client.query(query, [userid]);
     res.status(200).json(response.rows);
 
     if (req.body.userid != userid) {
-      throw new Error();
+      throw new Error
     }
   } catch (error) {
     console.error(error);
@@ -59,10 +66,11 @@ app.get("/user/:userid/donations/", async (req, res) => {
     const userid = req.params.userid;
     const query = "SELECT * FROM donations where donations.userid = $1";
     const response = await client.query(query, [userid]);
-    res.status(200).json(response.rows);
+    res.status(200).json(response.rows)
+    
 
     if (req.body.userid != userid) {
-      throw new Error();
+      throw new Error
     }
   } catch (error) {
     console.error(error);
@@ -73,26 +81,20 @@ app.get("/user/:userid/donations/", async (req, res) => {
 app.get("/user/:userid/donations/count", async (req, res) => {
   try {
     const userid = req.params.userid;
-    const countquery =
-      "SELECT COUNT(*) AS donation_count FROM donations WHERE donations.userid = $1";
+    const countquery = "SELECT COUNT(*) AS donation_count FROM donations WHERE donations.userid = $1";
     const countresponse = await client.query(countquery, [userid]);
-    const donationCount = parseInt(countresponse.rows[0].donation_count);
+    const donationCount = parseInt(countresponse.rows[0].donation_count)
 
     if (req.body.userid != userid) {
-      throw new Error();
+      throw new Error
     }
 
-    console.log(
-      `Thank you for your multiple donations! We appreciate all ${donationCount}!`,
-    );
+    console.log(`Thank you for your multiple donations! We appreciate all ${donationCount}!`)
     if (donationCount > 1) {
-      res
-        .status(200)
-        .json(
-          `Thank you for your multiple donations! We appreciate all ${donationCount}!`,
-        );
-    } else {
-      res.status(200).json(countresponse.rows);
+      res.status(200).json(`Thank you for your multiple donations! We appreciate all ${donationCount}!`);
+    }
+    else{
+      res.status(200).json(countresponse.rows)
     }
   } catch (error) {
     console.error(error);
@@ -109,7 +111,7 @@ app.get("/user/:userid/donation/:donationid", async (req, res) => {
     res.status(200).json(response.rows);
 
     if (req.body.userid != userid) {
-      throw new Error();
+      throw new Error
     }
   } catch (error) {
     console.error(error);
@@ -152,7 +154,7 @@ app.post("/user/:userid/donation/", async (req, res) => {
     res.status(200).json(response.rows);
 
     if (req.params.userid != userid) {
-      throw new Error();
+      throw new Error
     }
   } catch (error) {
     console.error(error);
@@ -163,13 +165,13 @@ app.post("/user/:userid/donation/", async (req, res) => {
 app.delete("/user/:userid", async (req, res) => {
   try {
     const userid = req.body.userid;
-    const query =
-      "DELETE FROM donations where userid = $1; DELETE * FROM users where userid = $1";
+    const query = 
+        "DELETE FROM donations where userid = $1\; DELETE * FROM users where userid = $1";
     const response = await client.query(query, [userid]);
     res.status(200).json(response.rows);
 
     if (req.params.userid != userid) {
-      throw new Error();
+      throw new Error
     }
   } catch (error) {
     console.error(error);
@@ -186,7 +188,7 @@ app.delete("/user/:userid/donation/:donationid", async (req, res) => {
     res.status(200).json(response.rows);
 
     if (req.params.userid != userid || req.params.donationid != donationid) {
-      throw new Error();
+      throw new Error
     }
   } catch (error) {
     console.error(error);
@@ -194,33 +196,33 @@ app.delete("/user/:userid/donation/:donationid", async (req, res) => {
   }
 });
 
-app.put("/user/:userid", async (req, res) => {
-  try {
-    const userid = req.body.userid;
-    const address = req.body.address;
-    const query = "UPDATE users SET address = $1 WHERE userid = $2";
-    const response = await client.query(query, [address, userid]);
-    res.status(200).json(response.rows);
+app.put("/user/:userid",
+  async (req, res) => {
+    try {
+      const userid = req.body.userid;
+      const address = req.body.address;
+      const query =
+        "UPDATE users SET address = $1 WHERE userid = $2";
+      const response = await client.query(query, [address, userid]);
+      res.status(200).json(response.rows);
 
-    if (req.params.userid != userid) {
-      throw new Error();
+      if (req.params.userid != userid) {
+        throw new Error
+      }
+    } catch (error) {
+      console.error(error);
+      res.status(500);
     }
-  } catch (error) {
-    console.error(error);
-    res.status(500);
-  }
-});
+  });
 
-// startDB();
+startDB();
 
-// export async function startDB() {
-//   await client.connect();
+export async function startDB() {
+  await client.connect();
 
-//   app.listen(PGPORT, () => {
-//     console.log(
-//       `Node.js server is listening for HTTP requests on port ${PGPORT}.`,
-//     );
-//   });
-// }
-
-export {app, client};
+  app.listen(PGPORT, () => {
+    console.log(
+      `Node.js server is listening for HTTP requests on port ${PGPORT}.`,
+    );
+  });
+}

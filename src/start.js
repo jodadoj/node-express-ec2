@@ -1,4 +1,4 @@
-import {app, client} from "./server.mjs";
+import {app, client} from "./server.js";
 
 const PGPORT = process.env.PGPORT;
 
