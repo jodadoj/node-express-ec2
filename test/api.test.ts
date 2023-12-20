@@ -1,10 +1,14 @@
 import { describe, expect, test } from "@jest/globals";
-import { startDB } from "../src/server"
 import supertest from "supertest";
-import runServer from "../src/server"
+import app from './server'; 
 
-const app = runServer();
+const request = supertest(app);
+
 
 describe("get user", () => {
-    
+    const response = await request.get'(/)'
+
+    expect(response.status).toBe(200)
+    expect(response.body.1).toBe()
+
 })

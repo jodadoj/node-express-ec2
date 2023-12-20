@@ -1,11 +1,9 @@
 type ErrorName =
-'IncorrectUserError' |
-'IncorrectDonationError' |
-'IncorrectDetailsError'
-;
+  | "IncorrectUserError"
+  | "IncorrectDonationError"
+  | "IncorrectDetailsError";
 
 export class CustomError extends Error {
-
   name: ErrorName;
   message: string;
   cause: any;
@@ -13,13 +11,12 @@ export class CustomError extends Error {
   constructor({
     name,
     message,
-    cause
+    cause,
   }: {
     name: ErrorName;
     message: string;
     cause?: any;
-  })
-  {
+  }) {
     super();
     this.name = name;
     this.message = message;

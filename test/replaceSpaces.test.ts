@@ -1,5 +1,8 @@
 import { describe, expect, test } from "@jest/globals";
-import { returnWhitespaces, replaceWhitespaces } from "../src/util/replaceSpaces";
+import {
+  returnWhitespaces,
+  replaceWhitespaces,
+} from "../src/util/replaceSpaces";
 
 describe("return whitespace", () => {
   test("changes nothing", () => {
