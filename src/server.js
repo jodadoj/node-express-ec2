@@ -41,6 +41,10 @@ app.get("/user/:userid", async (req, res) => {
     const query = "SELECT * FROM users where users.userid = $1";
     const response = await client.query(query, [userid]);
     res.status(200).json(response.rows);
+
+    if (req.body.userid != userid) {
+      throw new Error
+    }
   } catch (error) {
     console.error(error);
     res.status(500);
@@ -54,6 +58,10 @@ app.get("/user/:userid/donations/", async (req, res) => {
     const response = await client.query(query, [userid]);
     res.status(200).json(response.rows)
     
+
+    if (req.body.userid != userid) {
+      throw new Error
+    }
   } catch (error) {
     console.error(error);
     res.status(500);
@@ -66,6 +74,11 @@ app.get("/user/:userid/donations/count", async (req, res) => {
     const countquery = "SELECT COUNT(*) AS donation_count FROM donations WHERE donations.userid = $1";
     const countresponse = await client.query(countquery, [userid]);
     const donationCount = parseInt(countresponse.rows[0].donation_count)
+
+    if (req.body.userid != userid) {
+      throw new Error
+    }
+
     console.log(`Thank you for your multiple donations! We appreciate all ${donationCount}!`)
     if (donationCount > 1) {
       res.status(200).json(`Thank you for your multiple donations! We appreciate all ${donationCount}!`);
@@ -87,8 +100,8 @@ app.get("/user/:userid/donation/:donationid", async (req, res) => {
     const response = await client.query(query, [donationid]);
     res.status(200).json(response.rows);
 
-    if (response.rows.userid != userid) {
-      throw INCORRECT_USER_ERROR;
+    if (req.body.userid != userid) {
+      throw new Error
     }
   } catch (error) {
     console.error(error);
@@ -164,7 +177,7 @@ app.delete("/user/:userid/donation/:donationid", async (req, res) => {
     const response = await client.query(query, [donationid]);
     res.status(200).json(response.rows);
 
-    if (req.params.userid != userid) {
+    if (req.params.userid != userid || req.params.donationid != donationid) {
       throw new Error
     }
   } catch (error) {
