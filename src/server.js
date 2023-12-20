@@ -1,7 +1,7 @@
 import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
-import { Client } from "pg";
+import pg from "pg";
 
 dotenv.config(); // Read .env file lines as though they were env vars.
 
@@ -11,7 +11,7 @@ const DATABASE = process.env.DATABASE;
 const HOST = process.env.HOST;
 const PORT = process.env.PORT;
 
-const client = new Client({
+const client = new pg.Client({
   connectionString: `postgres://${USER}:${PASSWORD}@${HOST}:${PORT}/${DATABASE}`,
   ssl: false,
 });
