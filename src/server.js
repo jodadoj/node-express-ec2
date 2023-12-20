@@ -3,6 +3,8 @@ import dotenv from "dotenv";
 import express from "express";
 import pg from "pg";
 
+import { userLogger } from "./logger.js";
+
 dotenv.config(); // Read .env file lines as though they were env vars.
 
 const PGUSER = process.env.PGUSER;
@@ -24,13 +26,22 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors()); // add CORS support to each following route handler
 
 app.get('/', async (req, res) => {
+  try{
   const data = {
   1: 'use:',
   2: '/users/ to view all users info',
   3: '/user/:userid to view a certain user\'s info',
   4: '/user/:userid/donations to view all of given user\'s donation info ',
   5: '/user/:userid/donation/:donationid to view details of one particular donation'}
-  res.json(data)
+  res.status(200).json(data)
+  
+  userLogger.log('info', 'Successfully displayed main page')
+
+} catch (error) {
+  console.error(error);
+  userLogger.log('error', 'Failed to display main page')
+  res.status(500);
+}
 })
 
 app.get("/users/", async (req, res) => {
@@ -38,57 +49,68 @@ app.get("/users/", async (req, res) => {
     const query = "SELECT * FROM users";
     const response = await client.query(query);
     res.status(200).json(response.rows);
+    
+    userLogger.log('info', 'Successfully displayed all users')
 
   } catch (error) {
     console.error(error);
+    userLogger.log('error', 'Failed to display all users')
     res.status(500);
   }
 });
 
 app.get("/user/:userid", async (req, res) => {
+  const userid = req.params.userid;
   try {
-    const userid = req.params.userid;
     const query = "SELECT * FROM users where users.userid = $1";
     const response = await client.query(query, [userid]);
     res.status(200).json(response.rows);
-
+    
     if (req.body.userid != userid) {
       throw new Error
     }
+
+    userLogger.log('info', `Successfully displayed given user's ${userid}`)
+
   } catch (error) {
     console.error(error);
+    userLogger.log('error', `Failed to display given user's ${userid}`)
     res.status(500);
   }
 });
 
 app.get("/user/:userid/donations/", async (req, res) => {
+  const userid = req.params.userid;
   try {
-    const userid = req.params.userid;
     const query = "SELECT * FROM donations where donations.userid = $1";
     const response = await client.query(query, [userid]);
     res.status(200).json(response.rows)
     
-
+    
     if (req.body.userid != userid) {
       throw new Error
     }
+
+    userLogger.log('info', `Successfully displayed given user's ${userid} donations`)
+
   } catch (error) {
     console.error(error);
+    userLogger.log('error', `Failed to display given user's ${userid} donations`)
     res.status(500);
   }
 });
 
 app.get("/user/:userid/donations/count", async (req, res) => {
+  const userid = req.params.userid;
   try {
-    const userid = req.params.userid;
     const countquery = "SELECT COUNT(*) AS donation_count FROM donations WHERE donations.userid = $1";
     const countresponse = await client.query(countquery, [userid]);
     const donationCount = parseInt(countresponse.rows[0].donation_count)
-
+    
     if (req.body.userid != userid) {
       throw new Error
     }
-
+    
     console.log(`Thank you for your multiple donations! We appreciate all ${donationCount}!`)
     if (donationCount > 1) {
       res.status(200).json(`Thank you for your multiple donations! We appreciate all ${donationCount}!`);
@@ -96,34 +118,42 @@ app.get("/user/:userid/donations/count", async (req, res) => {
     else{
       res.status(200).json(countresponse.rows)
     }
+    
+    userLogger.log('info', `Successfully displayed given user's ${userid} donation count`)
+
   } catch (error) {
     console.error(error);
+    userLogger.log('error', `Failed to display given user's ${userid} donation count`)
     res.status(500);
   }
 });
 
 app.get("/user/:userid/donation/:donationid", async (req, res) => {
+  const userid = req.params.userid;
+  const donationid = req.params.donationid;
   try {
-    const userid = req.params.userid;
-    const donationid = req.params.donationid;
     const query = "SELECT * FROM donations where donations.donationid = $1";
     const response = await client.query(query, [donationid]);
     res.status(200).json(response.rows);
-
+    
     if (req.body.userid != userid) {
       throw new Error
     }
+
+    userLogger.log('info', `Successfully displayed given user's ${userid} donation ${donationid}`)
+
   } catch (error) {
     console.error(error);
+    userLogger.log('error', `Failed to display given user's ${userid} donation ${donationid}`)
     res.status(500);
   }
 });
 
 app.post("/user/", async (req, res) => {
+  const first_name = req.body.first_name;
+  const last_name = req.body.last_name;
+  const address = req.body.address;
   try {
-    const first_name = req.body.first_name;
-    const last_name = req.body.last_name;
-    const address = req.body.address;
 
     const query =
       "INSERT INTO users (first_name, last_name, address) VALUES ($1, $2, $3) RETURNING *";
@@ -133,17 +163,21 @@ app.post("/user/", async (req, res) => {
       address,
     ]);
     res.status(200).json(response.rows);
+
+    userLogger.log('info', `Successfully created a new user ${first_name}, ${last_name}, ${address}`)
+
   } catch (error) {
     console.error(error);
+    userLogger.log('error', `Failed to create new user ${first_name}, ${last_name}, ${address}`)
     res.status(500);
   }
 });
 
 app.post("/user/:userid/donation/", async (req, res) => {
+  const userid = req.body.userid;
+  const donation_amount = req.body.donation_amount;
+  const payment_method = req.body.payment_method;
   try {
-    const userid = req.body.userid;
-    const donation_amount = req.body.donation_amount;
-    const payment_method = req.body.payment_method;
     const query =
       "INSERT INTO donations (userid, donation_amount, payment_method) VALUES ($1, $2, $3)";
     const response = await client.query(query, [
@@ -156,15 +190,19 @@ app.post("/user/:userid/donation/", async (req, res) => {
     if (req.params.userid != userid) {
       throw new Error
     }
+
+    userLogger.log('info', `Successfully created a new donation ${donation_amount}, ${payment_method} for user ${userid}`)
+
   } catch (error) {
     console.error(error);
+    userLogger.log('error', `Successfully created a new donation ${donation_amount}, ${payment_method} for user ${userid}`)
     res.status(500);
   }
 });
 
 app.delete("/user/:userid", async (req, res) => {
+  const userid = req.body.userid;
   try {
-    const userid = req.body.userid;
     const query = 
         "DELETE FROM donations where userid = $1\; DELETE * FROM users where userid = $1";
     const response = await client.query(query, [userid]);
@@ -173,16 +211,20 @@ app.delete("/user/:userid", async (req, res) => {
     if (req.params.userid != userid) {
       throw new Error
     }
+
+    userLogger.log('info', `Successfully deleted user ${userid}`)
+
   } catch (error) {
     console.error(error);
+    userLogger.log('error', `Failed to delete user ${userid}`)
     res.status(500);
   }
 });
 
 app.delete("/user/:userid/donation/:donationid", async (req, res) => {
+  const userid = req.body.userid;
+  const donationid = req.body.donationid;
   try {
-    const userid = req.body.userid;
-    const donationid = req.body.donationid;
     const query = "DELETE FROM donations where donations.donationid = $1";
     const response = await client.query(query, [donationid]);
     res.status(200).json(response.rows);
@@ -190,17 +232,21 @@ app.delete("/user/:userid/donation/:donationid", async (req, res) => {
     if (req.params.userid != userid || req.params.donationid != donationid) {
       throw new Error
     }
+
+    userLogger.log('info', `Successfully deleted donation ${donationid} under user ${userid}`)
+
   } catch (error) {
     console.error(error);
+    userLogger.log('error', `Failed to delete donation ${donationid} under user ${userid}`)
     res.status(500);
   }
 });
 
 app.put("/user/:userid",
   async (req, res) => {
+    const userid = req.body.userid;
+    const address = req.body.address;
     try {
-      const userid = req.body.userid;
-      const address = req.body.address;
       const query =
         "UPDATE users SET address = $1 WHERE userid = $2";
       const response = await client.query(query, [address, userid]);
@@ -209,8 +255,12 @@ app.put("/user/:userid",
       if (req.params.userid != userid) {
         throw new Error
       }
+
+      userLogger.log('info', `Successfully edited address ${address} under user ${userid}`)
+
     } catch (error) {
       console.error(error);
+      userLogger.log('error', `Failed to edit address ${address} under user ${userid}`)
       res.status(500);
     }
   });
