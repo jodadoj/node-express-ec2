@@ -13,7 +13,7 @@ const PORT = process.env.PORT;
 
 const client = new pg.Client({
   connectionString: `postgres://${USER}:${PASSWORD}@${HOST}:${PORT}/${DATABASE}`,
-  ssl: false,
+  ssl: {rejectUnauthorized: false},
 });
 
 // Configure express routes
@@ -160,7 +160,7 @@ export async function startDB() {
 
   app.listen(PORT, () => {
     console.log(
-      `Server started listening for HTTP requests on port ${PORT}.  Let's go!`,
+      `Node.js server is listening for HTTP requests on port ${PORT}.`,
     );
   });
 }
