@@ -22,6 +22,13 @@ const app = express();
 app.use(express.json()); // add JSON body parser to each following route handler
 app.use(cors()); // add CORS support to each following route handler
 
+app.get('/', (res, req) => {
+  "use: \n"
+  "/user/:user_id to view a certain user's info \n"
+  "/user/:user_id/donations to view all of given user's donation info \n"
+  "/user/:user_id/donations/:donation_id to view details of one particular donation"
+})
+
 app.get("/user/:user_id", async (res, req) => {
   try {
     const user_id = req.params.user_id;
