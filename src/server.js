@@ -52,7 +52,27 @@ app.get("/user/:userid/donations/", async (req, res) => {
     const userid = req.params.userid;
     const query = "SELECT * FROM donations where donations.userid = $1";
     const response = await client.query(query, [userid]);
-    res.status(200).json(response.rows);
+    res.status(200).json(response.rows)
+    
+  } catch (error) {
+    console.error(error);
+    res.status(500);
+  }
+});
+
+app.get("/user/:userid/donations/count", async (req, res) => {
+  try {
+    const userid = req.params.userid;
+    const countquery = "SELECT COUNT(*) AS donation_count FROM donations WHERE donations.userid = $1";
+    const countresponse = await client.query(countquery, [userid]);
+    const donationCount = parseInt(countresponse.rows[0].donation_count)
+    console.log(`Thank you for your multiple donations! We appreciate all ${donationCount}!`)
+    if (donationCount > 1) {
+      res.status(200).json(`Thank you for your multiple donations! We appreciate all ${donationCount}!`);
+    }
+    else{
+      res.status(200).json(countresponse.rows)
+    }
   } catch (error) {
     console.error(error);
     res.status(500);
