@@ -20,20 +20,26 @@ const client = new pg.Client({
 const app = express();
 
 app.use(express.json()); // add JSON body parser to each following route handler
+app.use(express.urlencoded({ extended: true }));
 app.use(cors()); // add CORS support to each following route handler
 
-app.get('/', (res, req) => {
-  "use: \n"
-  "/user/:user_id to view a certain user's info \n"
-  "/user/:user_id/donations to view all of given user's donation info \n"
-  "/user/:user_id/donations/:donation_id to view details of one particular donation"
+// app.get('/', (req, res) => res.json('Hi Julia!'))
+
+app.get('/', async (req, res) => {
+  const data = {
+  1: 'use:',
+  2: '/user/:userid to view a certain user\'s info',
+  3: '/user/:userid/donations to view all of given user\'s donation info ',
+  4: '/user/:userid/donation/:donationid to view details of one particular donation'}
+  res.json(data)
 })
 
-app.get("/user/:user_id", async (res, req) => {
+app.get("/user/:userid", async (req, res) => {
   try {
-    const user_id = req.params.user_id;
-    const query = "SELECT * FROM users where user_id is $1";
-    const response = await client.query(query, [user_id]);
+    const userid = req.params.userid;
+    console.log(userid)
+    const query = "SELECT * FROM users where users.userid = $1";
+    const response = await client.query(query, [userid]);
     res.status(200).json(response.rows);
   } catch (error) {
     console.error(error);
@@ -41,11 +47,11 @@ app.get("/user/:user_id", async (res, req) => {
   }
 });
 
-app.get("/user/:user_id/donation/", async (res, req) => {
+app.get("/user/:userid/donations/", async (req, res) => {
   try {
-    const user_id = req.params.user_id;
-    const query = "SELECT * FROM donations where user_id is $1";
-    const response = await client.query(query, [user_id]);
+    const userid = req.params.userid;
+    const query = "SELECT * FROM donations where donations.userid = $1";
+    const response = await client.query(query, [userid]);
     res.status(200).json(response.rows);
   } catch (error) {
     console.error(error);
@@ -53,16 +59,16 @@ app.get("/user/:user_id/donation/", async (res, req) => {
   }
 });
 
-app.get("/user/:user_id/donation/:donation_id", async (res, req) => {
+app.get("/user/:userid/donation/:donationid", async (req, res) => {
   try {
-    const user_id = req.params.user_id;
-    const donation_id = req.params.donation_id;
-    const query = "SELECT * FROM donations where donation_id is $1";
-    const response = await client.query(query, [donation_id]);
+    const userid = req.params.userid;
+    const donationid = req.params.donationid;
+    const query = "SELECT * FROM donations where donations.donationid = $1";
+    const response = await client.query(query, [donationid]);
     res.status(200).json(response.rows);
 
-    if (response.rows.user_id != user_id) {
-      throw error;
+    if (response.rows.userid != userid) {
+      throw INCORRECT_USER_ERROR;
     }
   } catch (error) {
     console.error(error);
@@ -70,13 +76,14 @@ app.get("/user/:user_id/donation/:donation_id", async (res, req) => {
   }
 });
 
-app.post("/user/", async (res, req) => {
+app.post("/user/", async (req, res) => {
   try {
-    const first_name = req.params.first_name;
-    const last_name = req.params.last_name;
-    const address = req.params.address;
+    const first_name = req.body.first_name;
+    const last_name = req.body.last_name;
+    const address = req.body.address;
+
     const query =
-      "INSERT INTO users (first_name, last_name, address) VALUES ($1, $2, $3)";
+      "INSERT INTO users (first_name, last_name, address) VALUES ($1, $2, $3) RETURNING *";
     const response = await client.query(query, [
       first_name,
       last_name,
@@ -89,48 +96,22 @@ app.post("/user/", async (res, req) => {
   }
 });
 
-app.post("/user/:user_id/donation/", async (res, req) => {
+app.post("/user/:userid/donation/", async (req, res) => {
   try {
-    const user_id = req.params.user_id;
-    const payment_amount = req.params.payment_amount;
-    const payment_method = req.params.payment_method;
+    const userid = req.body.userid;
+    const donation_amount = req.body.donation_amount;
+    const payment_method = req.body.payment_method;
     const query =
-      "INSERT INTO donations (user_id, payment_amount, payment_method) VALUES ($1, $2, $3)";
+      "INSERT INTO donations (userid, donation_amount, payment_method) VALUES ($1, $2, $3)";
     const response = await client.query(query, [
-      user_id,
-      payment_amount,
+      userid,
+      donation_amount,
       payment_method,
     ]);
     res.status(200).json(response.rows);
-  } catch (error) {
-    console.error(error);
-    res.status(500);
-  }
-});
 
-app.delete("user/:user_id", async (req, res) => {
-  try {
-    const user_id = req.params.user_id;
-    const query = 
-        "DELETE * FROM donations where user_id = $1\; DELETE * FROM users where user_id = $1";
-    const response = await client.query(query, [user_id]);
-    res.status(200).json(response.rows);
-  } catch (error) {
-    console.error(error);
-    res.status(500);
-  }
-});
-
-app.delete("user/:user_id/donations/:donation_id", async (req, res) => {
-  try {
-    const user_id = req.params.user_id;
-    const donation_id = req.params.donation_id;
-    const query = "DELETE * FROM donations where donation_id = $1";
-    const response = await client.query(query, [donation_id]);
-    res.status(200).json(response.rows);
-
-    if (response.rows.user_id != user_id) {
-      throw error;
+    if (req.params.userid != userid) {
+      throw new Error
     }
   } catch (error) {
     console.error(error);
@@ -138,15 +119,53 @@ app.delete("user/:user_id/donations/:donation_id", async (req, res) => {
   }
 });
 
-app.put("/user/:user_id",
+app.delete("/user/:userid", async (req, res) => {
+  try {
+    const userid = req.body.userid;
+    const query = 
+        "DELETE FROM donations where userid = $1\; DELETE * FROM users where userid = $1";
+    const response = await client.query(query, [userid]);
+    res.status(200).json(response.rows);
+
+    if (req.params.userid != userid) {
+      throw new Error
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500);
+  }
+});
+
+app.delete("/user/:userid/donation/:donationid", async (req, res) => {
+  try {
+    const userid = req.body.userid;
+    const donationid = req.body.donationid;
+    const query = "DELETE FROM donations where donations.donationid = $1";
+    const response = await client.query(query, [donationid]);
+    res.status(200).json(response.rows);
+
+    if (req.params.userid != userid) {
+      throw new Error
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500);
+  }
+});
+
+app.put("/user/:userid",
   async (req, res) => {
     try {
-      const user_id = req.params.user_id;
-      const address = req.params.address;
+      const userid = req.body.userid;
+      const address = req.body.address;
       const query =
-        "UPDATE users SET address = $1 WHERE user_id = $2";
-      const response = await client.query(query, [address, user_id]);
-      res.status(200).json(response.rows[0]);
+        "UPDATE users SET address = $1 WHERE userid = $2";
+      const response = await client.query(query, [address, userid]);
+      res.status(200).json(response.rows);
+
+      if (req.params.userid != userid) {
+        throw new Error
+      }
     } catch (error) {
       console.error(error);
       res.status(500);
